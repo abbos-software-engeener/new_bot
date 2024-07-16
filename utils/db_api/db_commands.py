@@ -1,3 +1,7 @@
+import django
+
+django.setup()
+
 from typing import Union
 
 import asyncpg
@@ -5,8 +9,6 @@ from asyncpg import Connection
 from asyncpg.pool import Pool
 
 from data import config
-
-
 class Database:
     def __init__(self):
         self.pool: Union[Pool, None] = None
@@ -135,11 +137,11 @@ class Database:
     #     )
 
     async def get_categories(self):
-        sql = "SELECT DISTINCT name FROM main_category"
+        sql = "SELECT  * FROM main_category"
         return await self.execute(sql, fetch=True)
 
     async def get_subcategories(self, category):
-        sql = f"SELECT DISTINCT name, category_id FROM main_subcategory WHERE category_id='{category}' "#
+        sql = f"SELECT * FROM main_subcategory WHERE category_id={category[0]}"#
         return await self.execute(sql, fetch=True)
 
     async def count_products(self, category_code, subcategory_code=None):
@@ -150,7 +152,8 @@ class Database:
         return await self.execute(sql, fetchval=True)
 
     async def get_products(self, category, subcategory):
-        sql = f"SELECT * FROM main_house WHERE category_id='{category}' AND subcategory='{subcategory}'"
+        sql = f"SELECT * FROM main_house WHERE category_id='{category[0]}' AND subcategory_id='{subcategory[0]}'"
+        print(sql,155)
         return await self.execute(sql, fetch=True)
 
     async def get_product(self, id):
@@ -159,3 +162,5 @@ class Database:
 
     async def drop_products(self):
         await self.execute("DROP TABLE main_house", execute=True)
+
+

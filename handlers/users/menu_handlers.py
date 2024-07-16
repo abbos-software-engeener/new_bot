@@ -1,5 +1,4 @@
 from typing import Union
-
 from aiogram import types
 from aiogram.types import CallbackQuery, Message
 
@@ -10,7 +9,7 @@ from keyboards.inline.menu_keyboards import (
     items_keyboard,
     item_keyboard,
 )
-from loader import dp, db
+from loader import dp, db, bot
 
 
 # Bosh menyu matni uchun handler
@@ -48,23 +47,25 @@ async def list_subcategories(callback: CallbackQuery, category, **kwargs):
 async def list_items(callback: CallbackQuery, category, subcategory, **kwargs):
     markup = await items_keyboard(category, subcategory)
 
-    await callback.message.edit_text(text="Mahsulot tanlang", reply_markup=markup)
+    await callback.message.edit_text(text="UY tanlang", reply_markup=markup)
 
 
 # Biror mahsulot uchun Xarid qilish tugmasini yuboruvchi funksiya
 async def show_item(callback: CallbackQuery, category, subcategory, item_id):
     markup = item_keyboard(category, subcategory, item_id)
 
-    # Mahsulot haqida ma'lumotni bazadan olamiz
+    # We get information about the product from the database
     item = await db.get_product(item_id)
 
-    if item["photo"]:
-        text = f"<a href=\"{item['photo']}\">{item['productname']}</a>\n\n"
+    if item["image_data1"]:
+        text = f"<a href=\"{item['image_data1']}\">{item['name']}</a>\n\n"
     else:
-        text = f"{item['productname']}\n\n"
-    text += f"Narxi: {item['price']}$\n{item['description']}"
-
+        text = f"{item['name']}\n\n"
+    text += f"Price: {item['price']}$\n{item['description']}"
+    
+    await bot.send_photo(callback.from_user.id, photo=item['image_data1'], caption=text, parse_mode='HTML')
     await callback.message.edit_text(text=text, reply_markup=markup)
+
 
 
 # Yuqoridagi barcha funksiyalar uchun yagona handler

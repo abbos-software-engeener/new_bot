@@ -31,7 +31,7 @@ async def categories_keyboard():
     CURRENT_LEVEL = 0
 
     # Keyboard yaratamiz
-    markup = InlineKeyboardMarkup(row_width=1)
+    markup = InlineKeyboardMarkup(row_width=3)
 
     # Bazadagi barcha kategoriyalarni olamiz
     categories = await db.get_categories()
@@ -39,13 +39,12 @@ async def categories_keyboard():
     for category in categories:
         # Kategoriyaga tegishli mahsulotlar sonini topamiz
         # number_of_items = await db.count_products(category["category_code"])
-
         # # Tugma matnini yasab olamiz
         button_text = f"{category['name']}"
 
         # Tugma bosganda qaytuvchi callbackni yasaymiz: Keyingi bosqich +1 va kategoriyalar
         callback_data = make_callback_data(
-            level=CURRENT_LEVEL + 1, category=category["name"]
+            level=CURRENT_LEVEL + 1, category=category["id"]
         )
 
         # Tugmani keyboardga qo'shamiz
@@ -61,9 +60,8 @@ async def categories_keyboard():
 async def subcategories_keyboard(category):
     CURRENT_LEVEL = 1
     markup = InlineKeyboardMarkup(row_width=1)
-
     # Kategoriya ostidagi kategoriyalarni bazadan olamiz
-    subcategories = await db.get_subcategories(category)
+    subcategories = await db.get_subcategories([category[0]])
     for subcategory in subcategories:
         # Kategoriyada nechta mahsulot borligini tekshiramiz
         # number_of_items = await db.count_products(
@@ -76,8 +74,8 @@ async def subcategories_keyboard(category):
         # Tugma bosganda qaytuvchi callbackni yasaymiz: Keyingi bosqich +1 va kategoriyalar
         callback_data = make_callback_data(
             level=CURRENT_LEVEL + 1,
-            category=category["name"],
-            subcategory=subcategory["name"],
+            category=category[0],
+            subcategory=subcategory[0],
         )
         markup.insert(
             InlineKeyboardButton(text=button_text, callback_data=callback_data)
@@ -102,7 +100,7 @@ async def items_keyboard(category, subcategory):
     items = await db.get_products(category, subcategory)
     for item in items:
         # Tugma matnini yasaymiz
-        button_text = f"{item['named']} - ${item['price']}"
+        button_text = f"{item['name']} - ${item['price']}"
 
         # Tugma bosganda qaytuvchi callbackni yasaymiz: Keyingi bosqich +1 va kategoriyalar
         callback_data = make_callback_data(
