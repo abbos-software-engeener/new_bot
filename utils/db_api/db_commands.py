@@ -1,7 +1,3 @@
-import django
-
-django.setup()
-
 from typing import Union
 
 import asyncpg

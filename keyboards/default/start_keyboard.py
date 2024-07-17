@@ -8,3 +8,22 @@ menu = ReplyKeyboardMarkup(
     ],
     resize_keyboard=True,
 )
+menu_ru = ReplyKeyboardMarkup(
+     keyboard=[
+        [
+            KeyboardButton(text="Главное меню"),
+        ],
+    ],
+    resize_keyboard=True,
+)
+
+lang = ReplyKeyboardMarkup(
+    keyboard=[
+        [
+            KeyboardButton(text="O'zbek")
+        ],
+        [
+            KeyboardButton(text="Русский")
+        ],
+    ]
+)
