@@ -32,7 +32,7 @@ Salom!
 Men TRIPLEBOX kompaniyasining onlayn yordamchisiman. 
 Muloqotni qaysi tilda davom ettirishni istaysiz?
         """,
-        reply_markup=lang,
+        reply_markup=menu,
     )
 
 @dp.message_handler(Text(startswith="O'zbek"),state=None)

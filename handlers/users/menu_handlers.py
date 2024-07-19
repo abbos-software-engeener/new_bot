@@ -5,7 +5,7 @@ from data.config import BOT_TOKEN
 import requests
 from aiogram.dispatcher import FSMContext
 from states.status import PersonalData
-
+from keyboards.default.start_keyboard import *
 from keyboards.inline.menu_keyboards import (
     menu_cd,
     categories_keyboard,
@@ -14,19 +14,28 @@ from keyboards.inline.menu_keyboards import (
     item_keyboard,
 )
 from loader import dp, db, bot
-
 def fetch_item_by_id(id):
     url = f'https://test.edugately.com/api/house/{id}'  # Replace with your API endpoint
     response = requests.get(url)
     return response.json()
 
+
+# def fetch_item_by_id(id):
+#     url = f'https://test.edugately.com/api/house/{id}'  # Replace with your API endpoint
+#     response = requests.get(url)
+#     return response.json()
+
+
+client_url = "https://test.edugately.com/api/client-create/"
+response = requests.get(client_url)
+
 # Bosh menyu matni uchun handler
-@dp.message_handler(text="Bosh menyu", state=PersonalData.uz)
+@dp.message_handler(text="Bosh menyu")
 async def show_menu(message: types.Message):
     # Foydalanuvchilarga barcha kategoriyalarni qaytaramiz
     await list_categories(message)
 
-@dp.message_handler(text="Главное меню", state=PersonalData.uz)
+@dp.message_handler(text="Главное меню")
 async def show_menu(message: types.Message):
     # Foydalanuvchilarga barcha kategoriyalarni qaytaramiz
     await list_categories(message)
@@ -60,13 +69,13 @@ async def list_items(callback: CallbackQuery, category, subcategory, **kwargs):
     markup = await items_keyboard(category, subcategory)
     print(callback)
 
-    await callback.message.edit_text(text="UY tanlang", reply_markup=markup)
+    await callback.message.edit_text(text="Uy tanlang", reply_markup=markup)
 
 
 
 # Biror mahsulot uchun Xarid qilish tugmasini yuboruvchi funksiya
 async def show_item(callback: CallbackQuery, category, subcategory, item_id):
-    markup = item_keyboard(category, subcategory, item_id)
+    # markup = item_keyboard(category, subcategory, item_id)
     # We get information about the product from the database
     item = await db.get_product(item_id)
     result=fetch_item_by_id(item_id)
@@ -78,7 +87,7 @@ async def show_item(callback: CallbackQuery, category, subcategory, item_id):
     text += f"Price: {item['price']}$\n{item['description']}"
     
     # await bot.send_photo(callback.from_user.id, photo=item['image_data1'], caption=text, parse_mode='HTML')
-    await callback.message.edit_text(text=text, reply_markup=markup)
+    await callback.message.edit_text(text=text, reply_markup=register)
 
 
 
@@ -117,3 +126,44 @@ async def navigate(call: CallbackQuery, callback_data: dict):
     await current_level_function(
         call, category=category, subcategory=subcategory, item_id=item_id
     )
+
+@dp.message_handler(text_contains="Ro'yxatdan o'tish", state=None)
+async def bot_register(message:types.Message, state: FSMContext):
+    job=message.text
+
+    await PersonalData.name.set()
+
+    await message.answer("Ro'yxatdan o'tish uchun to'liq ism familiyangizni kiriting!") 
+
+
+
+# /form komandasi uchun handler yaratamiz. Bu yerda foydalanuvchi hech qanday holatda emas, state=None
+@dp.message_handler(state=PersonalData.name)
+async def enter_test(message: types.Message, state: FSMContext):
+    surname = message.text
+    await state.update_data(
+        {"name": surname}
+    )
+    await message.answer("Raqamingizni jonating pastdagi tugma orqali !", reply_markup=menuStart)
+    await PersonalData.next()
+
+
+@dp.message_handler(state=PersonalData.phoneNum, content_types=types.ContentType.CONTACT)
+async def answer_phone(message: types.Message, state: FSMContext,):
+    phone = message.contact.phone_number
+    await state.update_data(
+        {"phone": phone}
+    )
+    get_data = await state.get_data()
+    data = {
+        'fullname': get_data.get("name"),
+        'phone_number': get_data.get("phone")
+    }
+    response = requests.post(client_url, json=data)
+    if response.status_code == 201:
+        # Print the response content
+        await message.answer("Muvafaqiyatli ro'yhatdan o'tdingiz.Siz bilan yaqin orada hodimlarimiz aloqaga chqadi.")
+    else:
+        # Print an error message if the request failed
+        await message.answer("Siz oldin ro'yxatdan o'tgansiz.")
+    await state.finish()     
